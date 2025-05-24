@@ -1,0 +1,40 @@
+#!/usr/bin/env ruby
+
+# frozen_string_literal: true
+
+require "bumpit"
+require "optparse"
+
+options = {}
+
+OptionParser.new do |parser|
+  parser.on("-c", "--commit", "Output a commit message.") do |commit|
+    options[:commit] = commit
+  end
+
+  parser.on("-h", "--help", "Prints this help message.") do
+    puts <<~HELP
+      USAGE
+          $ bumpit [options]
+
+      OPTIONS
+          #{parser.summarize.join.strip}
+
+      EXAMPLES
+          $ bumpit --commit --pristine --verify="bundle exec rake && yarn test"
+
+    HELP
+
+    exit
+  end
+
+  parser.on("-p", "--pristine", "Don't bump if not in a clean state.") do |pristine|
+    options[:pristine] = pristine
+  end
+
+  parser.on("--verify [COMMAND]", String, "Run a command to verify changes.") do |verify|
+    options[:verify] = verify
+  end
+end.parse!
+
+Bumpit.new(**options).call
