@@ -24,4 +24,4 @@ jobs:
         run: bundle exec rake spec
 
       - name: Lint the code
-        run: bundle exec rake rubocop
+        run: bundle exec rake ruby:lint
