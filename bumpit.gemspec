@@ -15,6 +15,7 @@ Gem::Specification.new do |s|
   s.metadata    = {
     "bug_tracker_uri"       => "https://github.com/tristandunn/bumpit/issues",
     "changelog_uri"         => "https://github.com/tristandunn/bumpit/blob/main/CHANGELOG.md",
+    "github_repo"           => "https://github.com/tristandunn/bumpit",
     "rubygems_mfa_required" => "true"
   }
 
