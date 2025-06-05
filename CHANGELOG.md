@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Update bundler in the lock file in the Bundler manager.
 - Support single quotes in Gemfile.
 - Update development dependencies.
 

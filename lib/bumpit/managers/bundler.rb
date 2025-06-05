@@ -6,10 +6,14 @@ require "pathname"
 class Bumpit
   module Managers
     class Bundler < Base
-      DEPENDENCY_MATCHER = /^\s*gem\s+['"]([^'"]+)['"].*$/
-      FILENAMES          = %w(Gemfile Gemfile.lock).freeze
-      OUTDATED_COMMAND   = "bundle outdated --only-explicit --parseable 2>/dev/null"
-      OUTDATED_MATCHER   = /\A(.+) \(newest (.+), installed (.+), requested = (.+)\)\z/
+      BUNDLE_VERSION_COMMAND = "bundle info bundler --version"
+      BUNDLER_UPDATE_COMMAND = "bundle update --bundler"
+      DEPENDENCY_MATCHER     = /^\s*gem\s+['"]([^'"]+)['"].*$/
+      FILENAMES              = %w(Gemfile Gemfile.lock).freeze
+      GEM_INFO_COMMAND       = "gem info --exact --remote --no-prerelease --no-verbose bundler"
+      INFO_MATCHER           = /bundler \(([^)]+)\)/
+      OUTDATED_COMMAND       = "bundle outdated --only-explicit --parseable 2>/dev/null"
+      OUTDATED_MATCHER       = /\A(.+) \(newest (.+), installed (.+), requested = (.+)\)\z/
 
       # Determine if the manager is valid.
       #
@@ -25,6 +29,8 @@ class Bumpit
       #
       # @return [void]
       def bump
+        update_bundler
+
         if outdated.any?
           write_contents
           bundle_update
@@ -35,8 +41,11 @@ class Bumpit
       #
       # @return [String]
       def message
-        if outdated.any?
-          "Updates #{to_sentence(outdated.keys.sort)} in Ruby."
+        dependencies = outdated.keys
+        dependencies << "bundler" if update_bundler?
+
+        if dependencies.any?
+          "Updates #{to_sentence(dependencies.sort)} in Ruby."
         end
       end
 
@@ -88,6 +97,27 @@ class Bumpit
 
             result[name] = { current: current, latest: latest }
           end
+        end
+      end
+
+      # Update Bundler in the lock file.
+      #
+      # @return [void]
+      def update_bundler
+        if update_bundler?
+          `#{BUNDLER_UPDATE_COMMAND}`
+        end
+      end
+
+      # Determine if Bundler should be updated in the lock file.
+      #
+      # @return [Boolean]
+      def update_bundler?
+        @update_bundler ||= begin
+          _, latest = INFO_MATCHER.match(`#{GEM_INFO_COMMAND}`).to_a
+          current   = `#{BUNDLE_VERSION_COMMAND}`
+
+          Gem::Version.new(latest.to_s) > Gem::Version.new(current.to_s)
         end
       end
 
