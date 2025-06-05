@@ -50,13 +50,44 @@ RSpec.describe Bumpit::Managers::Bundler do
       allow(Bundler).to receive(:reset!)
       allow(Bundler).to receive(:reset_settings_and_root!)
       allow(Bundler::CLI::Update).to receive(:new).with({ all: true }, []).and_return(update)
-      allow(File).to receive(:read).and_return(%(gem "json", "2.10.1"\ngem "sqlite3", "2.5.0"))
+      allow(File).to receive(:read).and_return(%(gem "json", "2.10.1"\ngem 'sqlite3', '2.5.0'))
       allow(File).to receive(:write)
+      allow(instance).to receive(:`).with(described_class::BUNDLER_UPDATE_COMMAND)
+      allow(instance).to receive(:`).with(described_class::BUNDLE_VERSION_COMMAND).and_return("2.6.8")
+      allow(instance).to receive(:`).with(described_class::GEM_INFO_COMMAND).and_return(info)
       allow(instance).to receive(:`).with(described_class::OUTDATED_COMMAND).and_return(updates)
       allow(instance).to receive(:silence_output).and_yield
     end
 
+    context "with a Bundler update" do
+      let(:updates) { "" }
+
+      let(:info) do
+        <<~RUBYGEMS
+          *** REMOTE GEMS ***
+
+          bundler (2.6.9)
+              Authors: André Arko, Samuel Giddins, Colby Swandale, Hiroshi
+              Shibata, David Rodríguez, Grey Baker, Stephanie Morillo, Chris
+              Morris, James Wen, Tim Moore, André Medeiros, Jessica Lynn Suttles,
+              Terence Lee, Carl Lerche, Yehuda Katz
+              Homepage: https://bundler.io
+              License: MIT
+
+              The best way to manage your application's dependencies
+        RUBYGEMS
+      end
+
+      it "updates Bundler to the latest version" do
+        bump
+
+        expect(instance).to have_received(:`).with(described_class::BUNDLER_UPDATE_COMMAND)
+      end
+    end
+
     context "with updates" do
+      let(:info) { "" }
+
       let(:updates) do
         <<~GEMFILE
           Resolving dependencies...
@@ -74,7 +105,7 @@ RSpec.describe Bumpit::Managers::Bundler do
       it "writes a new Gemfile" do
         bump
 
-        expect(File).to have_received(:write).with("Gemfile", %(gem "json", "2.10.1"\ngem "sqlite3", "2.6.0"\n))
+        expect(File).to have_received(:write).with("Gemfile", %(gem "json", "2.10.1"\ngem 'sqlite3', '2.6.0'\n))
       end
 
       it "silences the update output" do
@@ -109,6 +140,7 @@ RSpec.describe Bumpit::Managers::Bundler do
     end
 
     context "with no updates" do
+      let(:info)    { "" }
       let(:updates) { "" }
 
       it "does not attempt to read the Gemfile" do
@@ -155,10 +187,14 @@ RSpec.describe Bumpit::Managers::Bundler do
     let(:instance) { described_class.new }
 
     before do
+      allow(instance).to receive(:`).with(described_class::BUNDLE_VERSION_COMMAND).and_return("2.6.8")
+      allow(instance).to receive(:`).with(described_class::GEM_INFO_COMMAND).and_return(info)
       allow(instance).to receive(:`).with(described_class::OUTDATED_COMMAND).and_return(updates)
     end
 
     context "with updates" do
+      let(:info) { "" }
+
       let(:updates) do
         <<~GEMFILE
           Resolving dependencies...
@@ -171,7 +207,36 @@ RSpec.describe Bumpit::Managers::Bundler do
       it { is_expected.to eq("Updates rubocop and sqlite3 in Ruby.") }
     end
 
+    context "with a Bundler update" do
+      let(:updates) { "" }
+
+      let(:info) do
+        <<~RUBYGEMS
+          *** REMOTE GEMS ***
+
+          bundler (2.6.9)
+              Authors: André Arko, Samuel Giddins, Colby Swandale, Hiroshi
+              Shibata, David Rodríguez, Grey Baker, Stephanie Morillo, Chris
+              Morris, James Wen, Tim Moore, André Medeiros, Jessica Lynn Suttles,
+              Terence Lee, Carl Lerche, Yehuda Katz
+              Homepage: https://bundler.io
+              License: MIT
+
+              The best way to manage your application's dependencies
+        RUBYGEMS
+      end
+
+      before do
+        allow(instance).to receive(:`).with(described_class::BUNDLER_UPDATE_COMMAND)
+
+        instance.bump
+      end
+
+      it { is_expected.to eq("Updates bundler in Ruby.") }
+    end
+
     context "with no updates" do
+      let(:info)    { "" }
       let(:updates) { "Resolving dependencies...\n\n" }
 
       it { is_expected.to be_nil }
