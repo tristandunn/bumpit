@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Update development dependencies.
+
 ## 0.1.1 — May 24th, 2025
 
 - Fix how `english` library is required.
