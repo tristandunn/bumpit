@@ -7,6 +7,7 @@ plugins:
 AllCops:
   CacheRootDirectory: "tmp/rubocop_cache"
   Exclude:
+    - "tmp/**/*"
     - "vendor/**/*"
   NewCops: enable
   SuggestExtensions: false
