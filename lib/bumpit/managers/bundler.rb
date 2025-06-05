@@ -6,10 +6,16 @@ require "pathname"
 class Bumpit
   module Managers
     class Bundler < Base
-      DEPENDENCY_MATCH = /gem "([^"]+)"/
-      FILENAMES        = %w(Gemfile Gemfile.lock).freeze
-      OUTDATED_COMMAND = "bundle outdated --only-explicit --parseable 2>/dev/null"
-      OUTDATED_MATCHER = /\A(.+) \(newest (.+), installed (.+), requested = (.+)\)\z/
+      FILENAMES = %w(Gemfile Gemfile.lock).freeze
+
+      BUNDLE_VERSION_COMMAND = "bundle info bundler --version"
+      BUNDLER_UPDATE_COMMAND = "bundle update --bundler"
+      GEM_INFO_COMMAND       = "gem info --remote bundler"
+      OUTDATED_COMMAND       = "bundle outdated --only-explicit --parseable 2>/dev/null"
+
+      DEPENDENCY_MATCHER = /gem "([^"]+)"/
+      INFO_MATCHER       = /bundler \(([^)]+)\)/
+      OUTDATED_MATCHER   = /\A(.+) \(newest (.+), installed (.+), requested = (.+)\)\z/
 
       # Determine if the manager is valid.
       #
@@ -25,9 +31,11 @@ class Bumpit
       #
       # @return [void]
       def bump
+        update_bundler
+
         if outdated.any?
           write_contents
-          bundler_update
+          bundle_update
         end
       end
 
@@ -35,8 +43,11 @@ class Bumpit
       #
       # @return [String]
       def message
-        if outdated.any?
-          "Updates #{to_sentence(outdated.keys.sort)} in Ruby."
+        dependencies = outdated.keys
+        dependencies << "bundler" if update_bundler?
+
+        if dependencies.any?
+          "Updates #{to_sentence(dependencies.sort)} in Ruby."
         end
       end
 
@@ -45,7 +56,7 @@ class Bumpit
       # Reset the existing cache and settings and run update for Bundler.
       #
       # @return [void]
-      def bundler_update
+      def bundle_update
         silence_output do
           ::Bundler.clear_gemspec_cache
           ::Bundler.reset!
@@ -67,7 +78,7 @@ class Bumpit
       # @return [Array]
       def modified_contents
         contents.split("\n").map do |line|
-          _, name = line.match(DEPENDENCY_MATCH).to_a
+          _, name = line.match(DEPENDENCY_MATCHER).to_a
           dependency = outdated[name]
 
           if dependency
@@ -88,6 +99,27 @@ class Bumpit
 
             result[name] = { current: current, latest: latest }
           end
+        end
+      end
+
+      # Update Bundler in the lock file.
+      #
+      # @return [void]
+      def update_bundler
+        if update_bundler?
+          `#{BUNDLER_UPDATE_COMMAND}`
+        end
+      end
+
+      # Determine if Bundler should be updated in the lock file.
+      #
+      # @return [Boolean]
+      def update_bundler?
+        @update_bundler ||= begin
+          _, latest = INFO_MATCHER.match(`#{GEM_INFO_COMMAND}`).to_a
+          current   = `#{BUNDLE_VERSION_COMMAND}`
+
+          Gem::Version.new(latest.to_s) > Gem::Version.new(current.to_s)
         end
       end
 
