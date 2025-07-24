@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Support single quotes in Gemfile.
 - Update development dependencies.
 
 ## 0.1.1 — May 24th, 2025

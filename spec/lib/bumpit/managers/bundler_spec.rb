@@ -50,7 +50,7 @@ RSpec.describe Bumpit::Managers::Bundler do
       allow(Bundler).to receive(:reset!)
       allow(Bundler).to receive(:reset_settings_and_root!)
       allow(Bundler::CLI::Update).to receive(:new).with({ all: true }, []).and_return(update)
-      allow(File).to receive(:read).and_return(%(gem "json", "2.10.1"\ngem "sqlite3", "2.5.0"))
+      allow(File).to receive(:read).and_return(%(gem "json", "2.10.1"\ngem 'sqlite3', '2.5.0'))
       allow(File).to receive(:write)
       allow(instance).to receive(:`).with(described_class::OUTDATED_COMMAND).and_return(updates)
       allow(instance).to receive(:silence_output).and_yield
@@ -74,7 +74,7 @@ RSpec.describe Bumpit::Managers::Bundler do
       it "writes a new Gemfile" do
         bump
 
-        expect(File).to have_received(:write).with("Gemfile", %(gem "json", "2.10.1"\ngem "sqlite3", "2.6.0"\n))
+        expect(File).to have_received(:write).with("Gemfile", %(gem "json", "2.10.1"\ngem 'sqlite3', '2.6.0'\n))
       end
 
       it "silences the update output" do
