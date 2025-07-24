@@ -6,10 +6,10 @@ require "pathname"
 class Bumpit
   module Managers
     class Bundler < Base
-      DEPENDENCY_MATCH = /gem "([^"]+)"/
-      FILENAMES        = %w(Gemfile Gemfile.lock).freeze
-      OUTDATED_COMMAND = "bundle outdated --only-explicit --parseable 2>/dev/null"
-      OUTDATED_MATCHER = /\A(.+) \(newest (.+), installed (.+), requested = (.+)\)\z/
+      DEPENDENCY_MATCHER = /^\s*gem\s+['"]([^'"]+)['"].*$/
+      FILENAMES          = %w(Gemfile Gemfile.lock).freeze
+      OUTDATED_COMMAND   = "bundle outdated --only-explicit --parseable 2>/dev/null"
+      OUTDATED_MATCHER   = /\A(.+) \(newest (.+), installed (.+), requested = (.+)\)\z/
 
       # Determine if the manager is valid.
       #
@@ -27,7 +27,7 @@ class Bumpit
       def bump
         if outdated.any?
           write_contents
-          bundler_update
+          bundle_update
         end
       end
 
@@ -45,7 +45,7 @@ class Bumpit
       # Reset the existing cache and settings and run update for Bundler.
       #
       # @return [void]
-      def bundler_update
+      def bundle_update
         silence_output do
           ::Bundler.clear_gemspec_cache
           ::Bundler.reset!
@@ -67,7 +67,7 @@ class Bumpit
       # @return [Array]
       def modified_contents
         contents.split("\n").map do |line|
-          _, name = line.match(DEPENDENCY_MATCH).to_a
+          _, name = line.match(DEPENDENCY_MATCHER).to_a
           dependency = outdated[name]
 
           if dependency
