@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 — July 30th, 2025
 
 - Update bundler in the lock file in the Bundler manager.
 - Support single quotes in Gemfile.
