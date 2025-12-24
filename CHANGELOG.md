@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.0 — Unreleased
+## 0.3.0 — December 24th, 2025
 
 - Update bundler.
 - Update development dependencies.
