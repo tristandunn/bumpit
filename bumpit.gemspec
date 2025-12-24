@@ -26,6 +26,6 @@ Gem::Specification.new do |s|
 
   s.required_ruby_version = ">= 3.4"
 
-  s.add_dependency "bundler",  "~> 2.6"
+  s.add_dependency "bundler",  "~> 4.0"
   s.add_dependency "json",     "~> 2.10"
 end

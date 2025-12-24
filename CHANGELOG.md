@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.0 — Unreleased
+
+- Update bundler.
+- Update development dependencies.
+
 ## 0.2.0 — July 30th, 2025
 
 - Update bundler in the lock file in the Bundler manager.
