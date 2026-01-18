@@ -83,6 +83,39 @@ RSpec.describe Bumpit::Managers::Bundler do
       end
     end
 
+    context "with a Bundler update and gem updates" do
+      let(:lock_file_writes) { [] }
+
+      let(:info) do
+        <<~RUBYGEMS
+          bundler (2.7.1)
+              Authors: André Arko
+              Homepage: https://bundler.io
+        RUBYGEMS
+      end
+
+      let(:updates) do
+        <<~GEMFILE
+          Resolving dependencies...
+
+          sqlite3 (newest 2.6.0, installed 2.5.0, requested = 2.5.0)
+        GEMFILE
+      end
+
+      before do
+        allow(update).to receive(:run) { lock_file_writes << :in_process_bundler }
+        allow(instance).to receive(:`).with(described_class::BUNDLER_UPDATE_COMMAND) {
+          lock_file_writes << :bundler_update_command
+        }
+      end
+
+      it "updates the lock file with the new Bundler version" do
+        bump
+
+        expect(lock_file_writes).to eq(%i(in_process_bundler bundler_update_command))
+      end
+    end
+
     context "with updates" do
       let(:info) { "" }
 

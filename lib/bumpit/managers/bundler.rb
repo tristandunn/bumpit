@@ -29,12 +29,12 @@ class Bumpit
       #
       # @return [void]
       def bump
-        update_bundler
-
         if outdated.any?
           write_contents
           bundle_update
         end
+
+        update_bundler
       end
 
       # Return a message for which dependencies were bumped.
@@ -113,7 +113,9 @@ class Bumpit
       #
       # @return [Boolean]
       def update_bundler?
-        @update_bundler ||= begin
+        return @update_bundler if defined?(@update_bundler)
+
+        @update_bundler = begin
           _, latest = INFO_MATCHER.match(`#{GEM_INFO_COMMAND}`).to_a
           current   = `#{BUNDLE_VERSION_COMMAND}`
 
