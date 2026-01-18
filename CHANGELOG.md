@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Fix bundler update being overwritten by in-process bundle update.
+
 ## 0.3.0 — December 24th, 2025
 
 - Update bundler.
