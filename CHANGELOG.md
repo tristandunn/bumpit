@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Fix bundler update missing from message when installed locally.
+
 ## 0.3.1 — January 28th, 2026
 
 - Fix bundler update being overwritten by in-process bundle update.

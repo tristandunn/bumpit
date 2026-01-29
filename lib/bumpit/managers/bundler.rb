@@ -6,10 +6,12 @@ require "pathname"
 class Bumpit
   module Managers
     class Bundler < Base
-      BUNDLE_VERSION_COMMAND = "bundle info bundler --version"
+      BUNDLED_WITH_MATCHER   = /^BUNDLED WITH\n\s+(.+)$/
       BUNDLER_UPDATE_COMMAND = "bundle update --bundler"
       DEPENDENCY_MATCHER     = /^\s*gem\s+['"]([^'"]+)['"].*$/
-      FILENAMES              = %w(Gemfile Gemfile.lock).freeze
+      GEMFILE                = "Gemfile"
+      GEMFILE_LOCK           = "Gemfile.lock"
+      FILENAMES              = [GEMFILE, GEMFILE_LOCK].freeze
       GEM_INFO_COMMAND       = "gem info --exact --remote --no-prerelease --no-verbose bundler"
       INFO_MATCHER           = /bundler \(([^)]+)\)/
       OUTDATED_COMMAND       = "bundle outdated --only-explicit --parseable 2>/dev/null"
@@ -68,7 +70,7 @@ class Bumpit
       #
       # @return [String] The contents of the Gemfile.
       def contents
-        @contents ||= File.read("Gemfile")
+        @contents ||= File.read(GEMFILE)
       end
 
       # Return the modified contents of the Gemfile.
@@ -116,8 +118,8 @@ class Bumpit
         return @update_bundler if defined?(@update_bundler)
 
         @update_bundler = begin
-          _, latest = INFO_MATCHER.match(`#{GEM_INFO_COMMAND}`).to_a
-          current   = `#{BUNDLE_VERSION_COMMAND}`
+          _, latest  = INFO_MATCHER.match(`#{GEM_INFO_COMMAND}`).to_a
+          _, current = BUNDLED_WITH_MATCHER.match(File.read(GEMFILE_LOCK)).to_a
 
           Gem::Version.new(latest.to_s) > Gem::Version.new(current.to_s)
         end
@@ -127,7 +129,7 @@ class Bumpit
       #
       # @return [void]
       def write_contents
-        File.write("Gemfile", "#{modified_contents.join("\n")}\n")
+        File.write(GEMFILE, "#{modified_contents.join("\n")}\n")
       end
     end
   end

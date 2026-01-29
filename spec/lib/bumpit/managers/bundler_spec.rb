@@ -5,8 +5,12 @@ RSpec.describe Bumpit::Managers::Bundler do
     subject { described_class.valid? }
 
     before do
-      allow(File).to receive(:exist?).with(Pathname.new(Dir.pwd).join("Gemfile")).and_return(true)
-      allow(File).to receive(:exist?).with(Pathname.new(Dir.pwd).join("Gemfile.lock")).and_return(true)
+      allow(File).to receive(:exist?)
+        .with(Pathname.new(Dir.pwd).join(described_class::GEMFILE))
+        .and_return(true)
+      allow(File).to receive(:exist?)
+        .with(Pathname.new(Dir.pwd).join(described_class::GEMFILE_LOCK))
+        .and_return(true)
       allow(described_class).to receive(:executable?).with("bundle").and_return(true)
     end
 
@@ -24,7 +28,9 @@ RSpec.describe Bumpit::Managers::Bundler do
 
     context "when Gemfile does not exist" do
       before do
-        allow(File).to receive(:exist?).with(Pathname.new(Dir.pwd).join("Gemfile")).and_return(false)
+        allow(File).to receive(:exist?)
+          .with(Pathname.new(Dir.pwd).join(described_class::GEMFILE))
+          .and_return(false)
       end
 
       it { is_expected.to be(false) }
@@ -32,7 +38,9 @@ RSpec.describe Bumpit::Managers::Bundler do
 
     context "when Gemfile.lock does not exist" do
       before do
-        allow(File).to receive(:exist?).with(Pathname.new(Dir.pwd).join("Gemfile.lock")).and_return(false)
+        allow(File).to receive(:exist?)
+          .with(Pathname.new(Dir.pwd).join(described_class::GEMFILE_LOCK))
+          .and_return(false)
       end
 
       it { is_expected.to be(false) }
@@ -50,10 +58,14 @@ RSpec.describe Bumpit::Managers::Bundler do
       allow(Bundler).to receive(:reset!)
       allow(Bundler).to receive(:reset_settings_and_root!)
       allow(Bundler::CLI::Update).to receive(:new).with({ all: true }, []).and_return(update)
-      allow(File).to receive(:read).and_return(%(gem "json", "2.10.1"\ngem 'sqlite3', '2.5.0'))
+      allow(File).to receive(:read)
+        .with(described_class::GEMFILE)
+        .and_return(%(gem "json", "2.10.1"\ngem 'sqlite3', '2.5.0'))
+      allow(File).to receive(:read)
+        .with(described_class::GEMFILE_LOCK)
+        .and_return("BUNDLED WITH\n   2.6.8")
       allow(File).to receive(:write)
       allow(instance).to receive(:`).with(described_class::BUNDLER_UPDATE_COMMAND)
-      allow(instance).to receive(:`).with(described_class::BUNDLE_VERSION_COMMAND).and_return("2.6.8")
       allow(instance).to receive(:`).with(described_class::GEM_INFO_COMMAND).and_return(info)
       allow(instance).to receive(:`).with(described_class::OUTDATED_COMMAND).and_return(updates)
       allow(instance).to receive(:silence_output).and_yield
@@ -130,13 +142,14 @@ RSpec.describe Bumpit::Managers::Bundler do
       it "reads the existing Gemfile" do
         bump
 
-        expect(File).to have_received(:read).with("Gemfile")
+        expect(File).to have_received(:read).with(described_class::GEMFILE)
       end
 
       it "writes a new Gemfile" do
         bump
 
-        expect(File).to have_received(:write).with("Gemfile", %(gem "json", "2.10.1"\ngem 'sqlite3', '2.6.0'\n))
+        expect(File).to have_received(:write)
+          .with(described_class::GEMFILE, %(gem "json", "2.10.1"\ngem 'sqlite3', '2.6.0'\n))
       end
 
       it "silences the update output" do
@@ -177,7 +190,7 @@ RSpec.describe Bumpit::Managers::Bundler do
       it "does not attempt to read the Gemfile" do
         bump
 
-        expect(File).not_to have_received(:read)
+        expect(File).not_to have_received(:read).with(described_class::GEMFILE)
       end
 
       it "does not attempt to write to the Gemfile" do
@@ -218,7 +231,9 @@ RSpec.describe Bumpit::Managers::Bundler do
     let(:instance) { described_class.new }
 
     before do
-      allow(instance).to receive(:`).with(described_class::BUNDLE_VERSION_COMMAND).and_return("2.6.8")
+      allow(File).to receive(:read)
+        .with(described_class::GEMFILE_LOCK)
+        .and_return("BUNDLED WITH\n   2.6.8")
       allow(instance).to receive(:`).with(described_class::GEM_INFO_COMMAND).and_return(info)
       allow(instance).to receive(:`).with(described_class::OUTDATED_COMMAND).and_return(updates)
     end
@@ -262,6 +277,13 @@ RSpec.describe Bumpit::Managers::Bundler do
       end
 
       it { is_expected.to eq("Updates bundler in Ruby.") }
+    end
+
+    context "with the latest Bundler version in the lock file" do
+      let(:updates) { "" }
+      let(:info)    { "bundler (2.6.8)" }
+
+      it { is_expected.to be_nil }
     end
 
     context "with no updates" do
