@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.1 — January 28th, 2026
 
 - Fix bundler update being overwritten by in-process bundle update.
 - Update development dependencies.
