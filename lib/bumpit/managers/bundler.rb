@@ -31,7 +31,7 @@ class Bumpit
       #
       # @return [void]
       def bump
-        if outdated.any?
+        if outdated?
           write_contents
           bundle_update
         end
@@ -100,6 +100,16 @@ class Bumpit
             result[name] = { current: current, latest: latest }
           end
         end
+      end
+
+      # Determine if there are outdated dependencies, including Bundler.
+      #
+      # Checks update_bundler? first to cache the result before bundle_update
+      # modifies the lock file.
+      #
+      # @return [Boolean]
+      def outdated?
+        update_bundler? || outdated.any?
       end
 
       # Update Bundler in the lock file.

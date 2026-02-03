@@ -254,6 +254,7 @@ RSpec.describe Bumpit::Managers::Bundler do
     end
 
     context "with a Bundler update" do
+      let(:update)  { instance_double(Bundler::CLI::Update, run: true) }
       let(:updates) { "" }
 
       let(:info) do
@@ -271,12 +272,56 @@ RSpec.describe Bumpit::Managers::Bundler do
       end
 
       before do
+        allow(Bundler).to receive(:clear_gemspec_cache)
+        allow(Bundler).to receive(:reset!)
+        allow(Bundler).to receive(:reset_settings_and_root!)
+        allow(Bundler::CLI::Update).to receive(:new).with({ all: true }, []).and_return(update)
+        allow(File).to receive(:read).with(described_class::GEMFILE).and_return("")
+        allow(File).to receive(:write)
+        allow(instance).to receive(:silence_output).and_yield
         allow(instance).to receive(:`).with(described_class::BUNDLER_UPDATE_COMMAND)
 
         instance.bump
       end
 
       it { is_expected.to eq("Updates bundler in Ruby.") }
+    end
+
+    context "with a Bundler update and gem updates" do
+      let(:update) { instance_double(Bundler::CLI::Update, run: true) }
+
+      let(:info) do
+        <<~RUBYGEMS
+          bundler (2.7.1)
+              Authors: André Arko
+              Homepage: https://bundler.io
+        RUBYGEMS
+      end
+
+      let(:updates) do
+        <<~GEMFILE
+          Resolving dependencies...
+
+          sqlite3 (newest 2.6.0, installed 2.5.0, requested = 2.5.0)
+        GEMFILE
+      end
+
+      before do
+        allow(Bundler).to receive(:clear_gemspec_cache)
+        allow(Bundler).to receive(:reset!)
+        allow(Bundler).to receive(:reset_settings_and_root!)
+        allow(Bundler::CLI::Update).to receive(:new).with({ all: true }, []).and_return(update)
+        allow(File).to receive(:read)
+          .with(described_class::GEMFILE)
+          .and_return(%(gem 'sqlite3', '2.5.0'))
+        allow(File).to receive(:write)
+        allow(instance).to receive(:silence_output).and_yield
+        allow(instance).to receive(:`).with(described_class::BUNDLER_UPDATE_COMMAND)
+
+        instance.bump
+      end
+
+      it { is_expected.to eq("Updates bundler and sqlite3 in Ruby.") }
     end
 
     context "with the latest Bundler version in the lock file" do
