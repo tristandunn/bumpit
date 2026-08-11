@@ -4,6 +4,7 @@
 
 - Fix bundler update missing from message when installed locally.
 - Fix bundler update missing from message when gems are also updated.
+- Update development dependencies.
 
 ## 0.3.1 — January 28th, 2026
 
