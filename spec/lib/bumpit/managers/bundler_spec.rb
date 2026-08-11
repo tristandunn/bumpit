@@ -183,6 +183,44 @@ RSpec.describe Bumpit::Managers::Bundler do
       end
     end
 
+    context "with updates including a release date" do
+      let(:info) { "" }
+
+      let(:updates) do
+        <<~GEMFILE
+          Resolving dependencies...
+
+          sqlite3 (newest 2.6.0, installed 2.5.0, requested = 2.5.0, released 2026-02-02)
+        GEMFILE
+      end
+
+      it "writes a new Gemfile" do
+        bump
+
+        expect(File).to have_received(:write)
+          .with(described_class::GEMFILE, %(gem "json", "2.10.1"\ngem 'sqlite3', '2.6.0'\n))
+      end
+    end
+
+    context "with updates including a cooldown" do
+      let(:info) { "" }
+
+      let(:updates) do
+        <<~GEMFILE
+          Resolving dependencies...
+
+          sqlite3 (newest 2.6.0, installed 2.5.0, requested = 2.5.0, in cooldown for 3 more days)
+        GEMFILE
+      end
+
+      it "writes a new Gemfile" do
+        bump
+
+        expect(File).to have_received(:write)
+          .with(described_class::GEMFILE, %(gem "json", "2.10.1"\ngem 'sqlite3', '2.6.0'\n))
+      end
+    end
+
     context "with no updates" do
       let(:info)    { "" }
       let(:updates) { "" }
@@ -251,6 +289,20 @@ RSpec.describe Bumpit::Managers::Bundler do
       end
 
       it { is_expected.to eq("Updates rubocop and sqlite3 in Ruby.") }
+    end
+
+    context "with updates including a release date" do
+      let(:info) { "" }
+
+      let(:updates) do
+        <<~GEMFILE
+          Resolving dependencies...
+
+          sqlite3 (newest 2.6.0, installed 2.5.0, requested = 2.5.0, released 2026-07-29)
+        GEMFILE
+      end
+
+      it { is_expected.to eq("Updates sqlite3 in Ruby.") }
     end
 
     context "with a Bundler update" do

@@ -15,7 +15,7 @@ class Bumpit
       GEM_INFO_COMMAND       = "gem info --exact --remote --no-prerelease --no-verbose bundler"
       INFO_MATCHER           = /bundler \(([^)]+)\)/
       OUTDATED_COMMAND       = "bundle outdated --only-explicit --parseable 2>/dev/null"
-      OUTDATED_MATCHER       = /\A(.+) \(newest (.+), installed (.+), requested = (.+)\)\z/
+      OUTDATED_MATCHER       = /\A(\S+) \(newest ([^,)]+), installed ([^,)]+), requested = ([^,)]+)/
 
       # Determine if the manager is valid.
       #
