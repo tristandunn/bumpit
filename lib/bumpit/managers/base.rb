@@ -2,7 +2,7 @@
 
 require "bundler"
 
-# :nocov:
+# simplecov:disable
 class Bumpit
   module Managers
     class Base
@@ -50,4 +50,4 @@ class Bumpit
     end
   end
 end
-# :nocov:
+# simplecov:enable
