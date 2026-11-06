@@ -7,7 +7,7 @@ class Bumpit
   module Managers
     class Bundler < Base
       BUNDLED_WITH_MATCHER   = /^BUNDLED WITH\n\s+(.+)$/
-      BUNDLER_UPDATE_COMMAND = "bundle update --bundler"
+      BUNDLER_UPDATE_COMMAND = "bundle update --bundler=%s"
       DEPENDENCY_MATCHER     = /^\s*gem\s+['"]([^'"]+)['"].*$/
       GEMFILE                = "Gemfile"
       GEMFILE_LOCK           = "Gemfile.lock"
@@ -89,6 +89,13 @@ class Bumpit
         end
       end
 
+      # Return the latest released version of Bundler.
+      #
+      # @return [String]
+      def latest_bundler_version
+        @latest_bundler_version ||= INFO_MATCHER.match(`#{GEM_INFO_COMMAND}`).to_a.last.to_s
+      end
+
       # Return the outdated dependencies.
       #
       # @return [Hash]
@@ -117,7 +124,7 @@ class Bumpit
       # @return [void]
       def update_bundler
         if update_bundler?
-          `#{BUNDLER_UPDATE_COMMAND}`
+          `#{format(BUNDLER_UPDATE_COMMAND, latest_bundler_version)}`
         end
       end
 
@@ -128,10 +135,9 @@ class Bumpit
         return @update_bundler if defined?(@update_bundler)
 
         @update_bundler = begin
-          _, latest  = INFO_MATCHER.match(`#{GEM_INFO_COMMAND}`).to_a
           _, current = BUNDLED_WITH_MATCHER.match(File.read(GEMFILE_LOCK)).to_a
 
-          Gem::Version.new(latest.to_s) > Gem::Version.new(current.to_s)
+          Gem::Version.new(latest_bundler_version) > Gem::Version.new(current.to_s)
         end
       end
 

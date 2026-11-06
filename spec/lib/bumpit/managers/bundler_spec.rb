@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
 RSpec.describe Bumpit::Managers::Bundler do
+  def bundler_update_command
+    format(described_class::BUNDLER_UPDATE_COMMAND, "2.7.1")
+  end
+
   describe ".valid?" do
     subject { described_class.valid? }
 
@@ -65,7 +69,7 @@ RSpec.describe Bumpit::Managers::Bundler do
         .with(described_class::GEMFILE_LOCK)
         .and_return("BUNDLED WITH\n   2.6.8")
       allow(File).to receive(:write)
-      allow(instance).to receive(:`).with(described_class::BUNDLER_UPDATE_COMMAND)
+      allow(instance).to receive(:`).with(bundler_update_command)
       allow(instance).to receive(:`).with(described_class::GEM_INFO_COMMAND).and_return(info)
       allow(instance).to receive(:`).with(described_class::OUTDATED_COMMAND).and_return(updates)
       allow(instance).to receive(:silence_output).and_yield
@@ -91,7 +95,7 @@ RSpec.describe Bumpit::Managers::Bundler do
       it "updates Bundler to the latest version" do
         bump
 
-        expect(instance).to have_received(:`).with(described_class::BUNDLER_UPDATE_COMMAND)
+        expect(instance).to have_received(:`).with(bundler_update_command)
       end
     end
 
@@ -116,7 +120,7 @@ RSpec.describe Bumpit::Managers::Bundler do
 
       before do
         allow(update).to receive(:run) { lock_file_writes << :in_process_bundler }
-        allow(instance).to receive(:`).with(described_class::BUNDLER_UPDATE_COMMAND) {
+        allow(instance).to receive(:`).with(bundler_update_command) {
           lock_file_writes << :bundler_update_command
         }
       end
@@ -331,7 +335,7 @@ RSpec.describe Bumpit::Managers::Bundler do
         allow(File).to receive(:read).with(described_class::GEMFILE).and_return("")
         allow(File).to receive(:write)
         allow(instance).to receive(:silence_output).and_yield
-        allow(instance).to receive(:`).with(described_class::BUNDLER_UPDATE_COMMAND)
+        allow(instance).to receive(:`).with(bundler_update_command)
 
         instance.bump
       end
@@ -368,7 +372,7 @@ RSpec.describe Bumpit::Managers::Bundler do
           .and_return(%(gem 'sqlite3', '2.5.0'))
         allow(File).to receive(:write)
         allow(instance).to receive(:silence_output).and_yield
-        allow(instance).to receive(:`).with(described_class::BUNDLER_UPDATE_COMMAND)
+        allow(instance).to receive(:`).with(bundler_update_command)
 
         instance.bump
       end
