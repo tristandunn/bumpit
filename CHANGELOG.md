@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.2 — November 5th, 2026
 
 - Fix bundler update missing from message when installed locally.
 - Fix bundler update missing from message when gems are also updated.
